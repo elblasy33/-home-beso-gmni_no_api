@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+env/
+venv/
+ENV/
+
+# Playwright & Browser Sessions
+data/browser_profile/
+data/uploads/
+data/artifacts/
+*.trace
+*.webm
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment and Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# OS & Editor
+.DS_Store
+.vscode/
+.idea/

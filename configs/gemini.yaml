@@ -1,0 +1,28 @@
+name: "gemini"
+title: "Google Gemini Web (gemini.google.com)"
+url: "https://gemini.google.com/app"
+
+chat:
+  input_selector: "div[role='textbox'], rich-textarea [contenteditable='true'], .ql-editor, textarea"
+  send_selector: "button[aria-label*='Send message'], button[aria-label*='Send'], button.send-button"
+  input_method: "fill"
+
+attachments:
+  - name: "attachment"
+    selector: "input[type='file'].hidden-file-input, input[type='file']"
+    multiple: true
+    description: "Gemini Document/Image/Media Upload"
+
+response:
+  selector: "message-content, .model-response-text, [data-test-id='model-response'], .markdown"
+  generating_selector: "button[aria-label*='Stop response'], button[aria-label*='Stop generating']"
+  stop_selector: "button[aria-label*='Stop response'], button[aria-label*='Stop generating']"
+  wait_until: "completed"
+  timeout: 180
+  min_length: 5
+
+auth:
+  login_url: "https://accounts.google.com"
+  check_selector: "div[role='textbox'], rich-textarea, button[aria-label*='Google Account']"
+  login_required_selector: "a[href*='accounts.google.com'], button[aria-label*='Sign in'], a[aria-label*='Sign in']"
+  auto_pause_for_human: true

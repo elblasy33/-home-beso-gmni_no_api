@@ -1,0 +1,32 @@
+name: mock_site
+title: Local Mock AI Chat Site
+url: http://localhost:8000/mock-site/chat
+chat:
+  input_selector: textarea#prompt-input
+  send_selector: button#send-btn
+  input_method: fill
+attachments:
+- name: document
+  selector: input#document-upload
+  multiple: false
+  description: Primary Document (PDF, TXT, DOCX)
+- name: image
+  selector: input#image-upload
+  multiple: false
+  description: Reference Image (PNG, JPG, WEBP)
+- name: data
+  selector: input#data-upload
+  multiple: false
+  description: Dataset / Spreadsheet (CSV, JSON, XLSX)
+response:
+  selector: .assistant-message.completed
+  generating_selector: .assistant-message.generating
+  stop_selector: button#stop-btn
+  wait_until: completed
+  timeout: 120
+  min_length: 5
+auth:
+  login_url: http://localhost:8000/mock-site/login
+  check_selector: '#user-profile-badge'
+  login_required_selector: '#login-form-container'
+  auto_pause_for_human: true

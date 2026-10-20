@@ -1,0 +1,24 @@
+name: generic_chat
+title: Generic Web Chat Template
+url: https://example.com/chat
+chat:
+  input_selector: textarea, [contenteditable='true']
+  send_selector: button[type='submit'], button[aria-label='Send message']
+  input_method: fill
+attachments:
+- name: file1
+  selector: input[type='file']
+  multiple: false
+  description: Generic File Upload
+response:
+  selector: .assistant-message, [data-message-author-role='assistant']
+  generating_selector: .typing-indicator, .streaming-text
+  stop_selector: button[aria-label='Stop generating']
+  wait_until: completed
+  timeout: 180
+  min_length: 1
+auth:
+  login_url: https://example.com/login
+  check_selector: '#user-menu, [aria-label=''User menu'']'
+  login_required_selector: 'input[type=''password''], #login-button'
+  auto_pause_for_human: true

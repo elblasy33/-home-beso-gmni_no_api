@@ -1,0 +1,22 @@
+services:
+  browser-ai-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: browser_ai_agent
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - HEADLESS=true
+      - BROWSER_PROFILE_DIR=/app/data/browser_profile
+      - ARTIFACTS_DIR=/app/data/artifacts
+      - UPLOADS_DIR=/app/data/uploads
+      - CONFIGS_DIR=/app/configs
+    volumes:
+      # Persist session cookies, profiles, artifacts, and configs
+      - ./data:/app/data
+      - ./configs:/app/configs
+    ipc: host  # Recommended for Chromium stability

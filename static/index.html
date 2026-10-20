@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser AI Automation Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <div class="brand">
+            <div class="brand-icon">⚡</div>
+            <div>
+                <div class="brand-title">Browser AI Automation Agent</div>
+                <div class="brand-subtitle">Playwright + FastAPI Engine</div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <!-- Browser Status Indicator -->
+            <div class="status-badge" id="browser-status-badge">
+                <div class="status-dot" id="browser-dot"></div>
+                <span id="browser-status-text">Checking Status...</span>
+            </div>
+
+            <!-- Headed / Headless Mode Switch -->
+            <div class="mode-toggle">
+                <button class="mode-btn" id="mode-headless" onclick="setBrowserMode(true)">Headless</button>
+                <button class="mode-btn" id="mode-headed" onclick="setBrowserMode(false)">Headed</button>
+            </div>
+
+            <!-- Quick Action: Manual Interactive Login -->
+            <button class="btn-secondary" onclick="openLoginModal()" style="padding: 8px 14px; font-size: 13px;">
+                🔑 Interactive Login
+            </button>
+
+            <!-- Quick Action: Recorder / Debugger -->
+            <button class="btn-secondary" onclick="openRecorderModal()" style="padding: 8px 14px; font-size: 13px;">
+                📹 Record Site
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="main-container">
+        
+        <!-- Left Panel: Job Configuration & Attachment Routing -->
+        <section class="glass-card">
+            <div class="card-header">
+                <h3 class="card-title">⚙️ Automation Request</h3>
+                <span style="font-size: 12px; color: var(--accent);" id="active-config-badge">Config: None</span>
+            </div>
+
+            <!-- Site Configuration Selector -->
+            <div class="form-group">
+                <label for="config-select">Site Configuration (Adapter)
+                    <span class="hint"><a href="javascript:void(0)" onclick="openConfigEditorModal()" style="color:var(--accent); text-decoration:none;">View / Edit YAML</a></span>
+                </label>
+                <select id="config-select" onchange="onConfigSelected()">
+                    <option value="">Loading configurations...</option>
+                </select>
+            </div>
+
+            <!-- Target Website URL -->
+            <div class="form-group">
+                <label for="site-url">Website URL</label>
+                <input type="text" id="site-url" placeholder="https://example.com/chat">
+            </div>
+
+            <!-- Prompt / Message -->
+            <div class="form-group">
+                <label for="prompt-input">Message / Prompt</label>
+                <textarea id="prompt-input" placeholder="Enter your prompt here... (e.g. Please analyze the attached document and image)"></textarea>
+            </div>
+
+            <!-- Configurable Multi-Target Attachments -->
+            <div class="form-group">
+                <label>Attachments & Target Routing
+                    <span class="hint">Route each file to a specific page selector</span>
+                </label>
+                
+                <div class="attachments-container" id="attachments-list">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <div style="margin-top: 6px;">
+                    <button type="button" class="btn-outline" onclick="addAttachmentRow()">
+                        ➕ Add File Attachment
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="action-row">
+                <button id="btn-submit-job" class="btn-primary" onclick="submitAutomationJob()">
+                    <span>🚀 Send & Wait for Response</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Right Panel: Live Execution Stepper, Logs & Extracted Response -->
+        <section class="glass-card">
+            <div class="card-header">
+                <h3 class="card-title">📊 Execution Monitor</h3>
+                <span id="job-id-display" style="font-size: 12px; color: var(--text-dim);">No Active Job</span>
+            </div>
+
+            <!-- Job Stepper Progress -->
+            <div class="stepper" id="job-stepper">
+                <div class="step-item" id="step-queued">
+                    <div class="step-circle">1</div>
+                    <span class="step-label">Queue</span>
+                </div>
+                <div class="step-item" id="step-starting">
+                    <div class="step-circle">2</div>
+                    <span class="step-label">Browser</span>
+                </div>
+                <div class="step-item" id="step-navigating">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">Navigate</span>
+                </div>
+                <div class="step-item" id="step-uploading">
+                    <div class="step-circle">4</div>
+                    <span class="step-label">Upload</span>
+                </div>
+                <div class="step-item" id="step-sending">
+                    <div class="step-circle">5</div>
+                    <span class="step-label">Send</span>
+                </div>
+                <div class="step-item" id="step-waiting_response">
+                    <div class="step-circle">6</div>
+                    <span class="step-label">Wait</span>
+                </div>
+                <div class="step-item" id="step-completed">
+                    <div class="step-circle">✓</div>
+                    <span class="step-label">Done</span>
+                </div>
+            </div>
+
+            <!-- Human-in-the-loop Alert Banner (Visible when login_required) -->
+            <div class="auth-alert-banner" id="auth-alert-banner">
+                <div>
+                    <strong style="color: var(--warning);">⚠️ Human Interaction Required</strong>
+                    <div style="font-size: 13px; color: var(--text-main); margin-top: 4px;">
+                        The site requires authentication, OTP/2FA, or CAPTCHA. Please complete it in the browser, then resume.
+                    </div>
+                </div>
+                <button class="auth-btn-resume" onclick="resumeActiveJob()">
+                    ▶️ Confirm & Resume
+                </button>
+            </div>
+
+            <!-- Live Execution Terminal -->
+            <div class="form-group">
+                <label>Live Execution Log
+                    <button class="btn-outline" style="padding: 2px 8px; font-size: 11px;" onclick="clearLogs()">Clear</button>
+                </label>
+                <div class="log-terminal" id="log-terminal">
+                    <div class="log-line">
+                        <span class="log-time">[System]</span>
+                        <span class="log-step">Ready</span>
+                        <span class="log-msg INFO">Awaiting task submission...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extracted Response Display -->
+            <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label>Extracted Website Response</label>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-outline" style="padding: 2px 8px; font-size: 11px;" onclick="copyResponse()">📋 Copy</button>
+                        <button class="btn-outline" style="padding: 2px 8px; font-size: 11px;" onclick="downloadResponse()">💾 Download</button>
+                    </div>
+                </div>
+                <div class="response-container" id="response-box">
+                    <div class="response-empty">Response will appear here after extraction.</div>
+                </div>
+            </div>
+
+            <!-- Debug Screenshot Preview (if any) -->
+            <div class="form-group" id="screenshot-container" style="display: none;">
+                <label>Execution / Failure Screenshot</label>
+                <a id="screenshot-link" href="#" target="_blank">
+                    <img id="screenshot-img" src="" alt="Screenshot" class="screenshot-preview">
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Interactive Login Helper -->
+    <div class="modal-backdrop" id="modal-login">
+        <div class="modal-content">
+            <h3 style="color:#60a5fa;">🔑 Launch Interactive Login</h3>
+            <p style="font-size: 13px; color: var(--text-muted);">
+                Opens a Headed browser window on the target login page. Enter credentials, 2FA, OTP, or solve CAPTCHA manually. Playwright will store the session cookies into the persistent profile.
+            </p>
+            <div class="form-group">
+                <label>Login Target URL</label>
+                <input type="text" id="modal-login-url" value="https://gemini.google.com/app">
+                <div style="display:flex; gap:8px; margin-top:6px;">
+                    <button type="button" class="btn-outline" style="font-size:12px; padding:3px 10px;" onclick="document.getElementById('modal-login-url').value='https://gemini.google.com/app'">🌟 Gemini</button>
+                    <button type="button" class="btn-outline" style="font-size:12px; padding:3px 10px;" onclick="document.getElementById('modal-login-url').value='http://localhost:8000/mock-site/login'">🧪 Mock Site</button>
+                </div>
+            </div>
+            <div style="display:flex; gap:12px; justify-content:flex-end;">
+                <button class="btn-secondary" onclick="closeLoginModal()">Close</button>
+                <button class="btn-primary" onclick="triggerInteractiveLogin()" style="flex:none; padding:10px 20px;">Open Browser</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Site Recorder & Config Generator -->
+    <div class="modal-backdrop" id="modal-recorder">
+        <div class="modal-content">
+            <h3 style="color:var(--accent);">📹 Site Recorder & Inspector</h3>
+            <p style="font-size: 13px; color: var(--text-muted);">
+                Launches an interactive browser session with DOM inspector injected. As you interact with inputs, file upload zones, and buttons on the target site, the recorder captures their selectors to generate a clean YAML configuration.
+            </p>
+            <div class="form-group">
+                <label>Target Site URL</label>
+                <input type="text" id="recorder-url" value="http://localhost:8000/mock-site/chat">
+            </div>
+            <div class="form-group">
+                <label>New Configuration Name (ID)</label>
+                <input type="text" id="recorder-config-name" placeholder="my_new_site">
+            </div>
+            <div style="display:flex; gap:12px; justify-content:flex-end;">
+                <button class="btn-secondary" onclick="closeRecorderModal()">Close</button>
+                <button class="btn-secondary" onclick="startRecordingSession()">1. Start Browser</button>
+                <button class="btn-primary" onclick="generateConfigFromRecording()" style="flex:none; padding:10px 20px;">2. Generate YAML</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Config Editor -->
+    <div class="modal-backdrop" id="modal-config-editor">
+        <div class="modal-content" style="max-width: 800px;">
+            <h3>📝 YAML Site Configuration</h3>
+            <textarea id="config-yaml-editor" style="height: 350px; font-family: var(--font-mono); font-size: 13px;"></textarea>
+            <div style="display:flex; gap:12px; justify-content:flex-end;">
+                <button class="btn-secondary" onclick="closeConfigEditorModal()">Close</button>
+                <button class="btn-primary" onclick="saveEditedConfig()" style="flex:none; padding:10px 20px;">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
